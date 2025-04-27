@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/Tesla2000/AntimagicField
+    rev: v.0.1.1
+    hooks:
+      - id: antimagic_field
+        require_serial: true
+        stages: [pre-push]
+        args: [--const_name_suffix "" --consts_location_name "src/tuple_namer/str_consts"]
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: ["--preview", "--line-length", "79"]
+  - repo: https://github.com/Tesla2000/temp-reorder-python-imports
+    rev: v0.0.1
+    hooks:
+      - id: reorder-python-imports
+        args: [--py37-plus, --add-import, 'from __future__ import annotations', --py39-plus, --retain-pre-import, 'True']
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args: [ --remove-all-unused-imports, --in-place ]
+  - repo: https://github.com/pycqa/flake8
+    rev: '7.2.0'
+    hooks:
+      - id: flake8
+        args: [ "--ignore=E203,W503,E501" ]
+default_stages: [commit]

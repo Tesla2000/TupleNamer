@@ -1,0 +1,7 @@
+-   id: tuple_namer
+    name: TupleNamer
+    description: Converts tuples to namedtuples where possible
+    entry: tuple_namer
+    language: python
+    types: [python]
+    files: ''
