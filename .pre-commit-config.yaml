@@ -6,16 +6,14 @@ repos:
         require_serial: true
         stages: [pre-push]
         args:
-          - --formatting
-          - black {filepaths} --preview --line-length 79\nreorder-python-imports {filepaths} --py37-plus --add-import 'from __future__ import annotations' --py39-plus
-          - --exclude
-          - prompts,constants,consts.py
-          - --suppress_fail
-          - "True"
-          - --const_name_suffix
-          - ""
-          - --consts_location_name
-          - "src/tuple_namer/str_consts"
+        - --formatting
+        - black {filepaths} --preview --line-length 79\nreorder-python-imports {filepaths} --py37-plus --add-import 'from __future__ import annotations' --py39-plus
+        - --exclude
+        - prompts,constants,consts.py
+        - --suppress_fail
+        - "True"
+        - --const_name_suffix ""
+        - --consts_location_name "src/tuple_namer/str_consts"
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
@@ -25,16 +23,7 @@ repos:
     rev: v0.0.1
     hooks:
       - id: reorder-python-imports
-        args:
-          [
-            --py37-plus,
-            --add-import,
-            "from __future__ import annotations",
-            --py39-plus,
-            --retain-pre-import,
-            'True',
-          ]
-        stages: [pre-commit, pre-push]
+        args: [--py37-plus, --add-import, 'from __future__ import annotations', --py39-plus, --retain-pre-import, 'True']
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.3.1
     hooks:
