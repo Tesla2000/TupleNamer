@@ -1,21 +1,40 @@
 repos:
   - repo: https://github.com/Tesla2000/AntimagicField
-    rev: v.0.1.1
+    rev: v0.1.4beta
     hooks:
       - id: antimagic_field
         require_serial: true
         stages: [pre-push]
-        args: [--const_name_suffix "" --consts_location_name "src/tuple_namer/str_consts"]
+        args:
+          - --formatting
+          - black {filepaths} --preview --line-length 79\nreorder-python-imports {filepaths} --py37-plus --add-import 'from __future__ import annotations' --py39-plus
+          - --exclude
+          - prompts,constants,consts.py
+          - --suppress_fail
+          - "True"
+          - --const_name_suffix
+          - ""
+          - --consts_location_name
+          - "src/tuple_namer/str_consts"
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
       - id: black
         args: ["--preview", "--line-length", "79"]
-  - repo: https://github.com/Tesla2000/temp-reorder-python-imports
+  - repo: https://github.com/Tesla2000/black-compatible-reorder-python-imports
     rev: v0.0.1
     hooks:
       - id: reorder-python-imports
-        args: [--py37-plus, --add-import, 'from __future__ import annotations', --py39-plus, --retain-pre-import, 'True']
+        args:
+          [
+            --py37-plus,
+            --add-import,
+            "from __future__ import annotations",
+            --py39-plus,
+            --retain-pre-import,
+            'True',
+          ]
+        stages: [pre-commit, pre-push]
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.3.1
     hooks:
