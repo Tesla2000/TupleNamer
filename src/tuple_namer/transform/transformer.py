@@ -27,6 +27,26 @@ from more_itertools import last
 from pydantic import create_model
 
 from ..config import Config
+from ..str_consts.src.tuple_namer import EMPTY
+from ..str_consts.src.tuple_namer import STAR
+from ..str_consts.src.tuple_namer import UNDERSCORE
+from ..str_consts.src.tuple_namer.transform.transformer import ARGUMENT
+from ..str_consts.src.tuple_namer.transform.transformer import CONTENT
+from ..str_consts.src.tuple_namer.transform.transformer import GPT_4O_MINI
+from ..str_consts.src.tuple_namer.transform.transformer import MESSAGE
+from ..str_consts.src.tuple_namer.transform.transformer import NAMED_TUPLE
+from ..str_consts.src.tuple_namer.transform.transformer import (
+    NAMED_TUPLE_FIELDS,
+)
+from ..str_consts.src.tuple_namer.transform.transformer import NT_FORMATTED
+from ..str_consts.src.tuple_namer.transform.transformer import ROLE
+from ..str_consts.src.tuple_namer.transform.transformer import TUPLE
+from ..str_consts.src.tuple_namer.transform.transformer import TUPLE_NAME
+from ..str_consts.src.tuple_namer.transform.transformer import TYPING
+from ..str_consts.src.tuple_namer.transform.transformer import (
+    TYPING_EXTENSIONS,
+)
+from ..str_consts.src.tuple_namer.transform.transformer import USER
 
 T = TypeVar("T", bound=CSTNode)
 
@@ -48,7 +68,7 @@ class Transformer(cst.CSTTransformer):
         if not (
             isinstance(annotation, Subscript)
             and isinstance(value := annotation.value, Name)
-            and value.value == "tuple"
+            and value.value == TUPLE
             and (
                 len(slice := annotation.slice) < 2
                 or not isinstance(slice[1].slice.value, LibcstEllipsis)
@@ -57,24 +77,24 @@ class Transformer(cst.CSTTransformer):
             return updated_node
         types = tuple(map(self._get_slice_value, slice))
         arg_names = tuple(
-            p.number_to_words(p.ordinal(num), comma="", andword="")
-            .replace(",", "")
-            .replace("-", "")
-            + "_argument"
+            p.number_to_words(p.ordinal(num), comma=EMPTY, andword=EMPTY)
+            .replace(",", EMPTY)
+            .replace("-", EMPTY)
+            + ARGUMENT
             for num in range(len(types))
         )
         model = create_model(
-            "NamedTupleFields",
+            NAMED_TUPLE_FIELDS,
             tuple_name=str,
             **{name: str for name in arg_names},
         )
         response = json.loads(
             completion(
-                "gpt-4o-mini",
+                GPT_4O_MINI,
                 messages=[
                     {
-                        "role": "user",
-                        "content": (
+                        ROLE: USER,
+                        CONTENT: (
                             "Peak suitable field names for the namedtuple fields and the name of the namedtuple that is a return value of the function bellow. Note field names must be single word or words connected with _:\n"
                             + Module([original_node]).code
                         ),
@@ -82,17 +102,17 @@ class Transformer(cst.CSTTransformer):
                 ],
                 temperature=0.0,
                 response_format=model,
-            ).choices[0]["message"]["content"]
+            ).choices[0][MESSAGE][CONTENT]
         )
-        tuple_name = "_" + response.pop("tuple_name").lstrip("_")
+        tuple_name = UNDERSCORE + response.pop(TUPLE_NAME).lstrip(UNDERSCORE)
         updated_node = updated_node.with_changes(
             returns=Annotation(annotation=Name(tuple_name))
         )
         updated_node = updated_node.visit(_ReturnReplacer(tuple_name))
         self.modified_returns[updated_node] = (
             f"class {tuple_name}(NamedTuple):"
-            + "".join(
-                f"\n\t{value}: {type_hint}"
+            + EMPTY.join(
+                NT_FORMATTED.format(value, type_hint)
                 for value, type_hint in zip(response.values(), types)
             )
         )
@@ -106,9 +126,9 @@ class Transformer(cst.CSTTransformer):
             map(
                 lambda elem: isinstance(elem, SimpleStatementLine)
                 and isinstance(import_ := elem.body[0], ImportFrom)
-                and import_.module.value in ("typing", "typing_extensions")
+                and import_.module.value in (TYPING, TYPING_EXTENSIONS)
                 and any(
-                    alias.name.value == "NamedTuple" for alias in import_.names
+                    alias.name.value == NAMED_TUPLE for alias in import_.names
                 ),
                 body,
             )
@@ -118,7 +138,7 @@ class Transformer(cst.CSTTransformer):
                 SimpleStatementLine(
                     [
                         ImportFrom(
-                            Name("typing"), [ImportAlias(Name("NamedTuple"))]
+                            Name(TYPING), [ImportAlias(Name(NAMED_TUPLE))]
                         )
                     ]
                 ),
@@ -172,7 +192,7 @@ class _ReturnReplacer(cst.CSTTransformer):
                 [
                     Arg(
                         updated_node.value,
-                        star="*"
+                        star=STAR
                         * (
                             bool(updated_node.value.lpar)
                             or not isinstance(updated_node.value, Tuple)
