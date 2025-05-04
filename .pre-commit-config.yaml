@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: antimagic_field
         require_serial: true
-        stages: [pre-push]
+        stages: [manual]
         args:
         - --formatting
         - black {filepaths} --preview --line-length 79\nreorder-python-imports {filepaths} --py37-plus --add-import 'from __future__ import annotations' --py39-plus
@@ -12,8 +12,10 @@ repos:
         - prompts,constants,consts.py
         - --suppress_fail
         - "True"
-        - --const_name_suffix ""
-        - --consts_location_name "src/tuple_namer/str_consts"
+        - --const_name_suffix
+        - ""
+        - --consts_location_name
+        - "src/tuple_namer/str_consts"
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
